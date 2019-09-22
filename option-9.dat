@@ -1,0 +1,20 @@
+;; This takes a relative file name based at the installation location of the package.
+(defun load-all-entities (filename)
+(let ((entity-hash (make-hash-table :test #'eq))
+      (entities
+       (with-open-file (strm
+                         (asdf:system-relative-pathname :option-9 filename)
+			 :direction :input
+			 :if-does-not-exist :error)
+        ;; Read the symbols from the point of view of this package
+	;; so later when we make-instance it will work even if the
+	;; user only "used" our package.
+	(let ((*package* (find-package 'option-9)))
+	(read strm)))))
+
+(assert (eq (car entities) :entities))
+
+(loop for  i in (cdr entities) do
+ (setf (gethash (cadr (assoc :kind i)) entity-hash) i))
+ entity-hash))
+ 
